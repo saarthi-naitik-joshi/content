@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'hero.dart';
 import 'video_example.dart';
+import 'web_view_example.dart';
 import 'package:flutter/services.dart';
 
 void main() {
@@ -50,6 +51,7 @@ class _MyHomePageState extends State<MyHomePage> {
             InkWell(
               child: const Text(
                 'View Image',
+                style: TextStyle(fontSize: 18),
               ),
               onTap: () {
                 Navigator.push(
@@ -64,12 +66,9 @@ class _MyHomePageState extends State<MyHomePage> {
             InkWell(
                 child: const Text(
                   'View Video',
+                  style: TextStyle(fontSize: 18),
                 ),
                 onTap: () {
-                  // SystemChrome.setPreferredOrientations(
-                  //     [DeviceOrientation.landscapeRight]).then((_) {
-                  //   runApp(VideoApp());
-                  // });
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -78,6 +77,19 @@ class _MyHomePageState extends State<MyHomePage> {
                   );
                 }),
             heightBox,
+            InkWell(
+                child: const Text(
+                  'View URL',
+                  style: TextStyle(fontSize: 18),
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => WebViewExample(),
+                    ),
+                  );
+                }),
           ],
         ),
       ),
