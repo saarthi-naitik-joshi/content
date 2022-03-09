@@ -5,6 +5,7 @@ import 'hero.dart';
 import 'video_example.dart';
 import 'web_view_example.dart';
 import 'package:flutter/services.dart';
+import 'pdf_view_example.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -87,6 +88,20 @@ class _MyHomePageState extends State<MyHomePage> {
                     context,
                     MaterialPageRoute(
                       builder: (_) => WebViewExample(),
+                    ),
+                  );
+                }),
+            heightBox,
+            InkWell(
+                child: const Text(
+                  'View PDF',
+                  style: TextStyle(fontSize: 18),
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => PDFexample(),
                     ),
                   );
                 }),
