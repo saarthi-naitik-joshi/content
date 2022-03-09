@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:path_provider/path_provider.dart';
+import 'main.dart';
 
 class PDFexample extends StatefulWidget {
   const PDFexample({Key? key}) : super(key: key);
@@ -70,7 +71,13 @@ class _PDFexampleState extends State<PDFexample> {
           child: Icon(Icons.arrow_back),
           onTap: () {
             try {
-              Navigator.of(context).maybePop();
+              Navigator.pop(context);
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => MyApp(),
+                ),
+              );
             } catch (e) {}
           },
         ),
@@ -78,36 +85,45 @@ class _PDFexampleState extends State<PDFexample> {
       body: Stack(
         children: [
           Container(
-            child: (remotePDFpath == '')
-                ? Container(
-                    child: Text('Loading ...', style: TextStyle(fontSize: 24)))
-                : PDFView(
-                    filePath: remotePDFpath,
-                    enableSwipe: true,
-                    swipeHorizontal: false,
-                    autoSpacing: false,
-                    pageFling: true,
-                    onRender: (_pages) {
-                      setState(() {
-                        pages = _pages;
-                        currentPage = 0;
-                        isReady = true;
-                      });
-                    },
-                    onError: (error) {
-                      print(error.toString());
-                    },
-                    onPageError: (page, error) {
-                      print('$page: ${error.toString()}');
-                    },
-                    onViewCreated: (PDFViewController pdfViewController) {
-                      _controller.complete(pdfViewController);
-                    },
-                    onPageChanged: (int? page, int? total) {
-                      print('page change: $page/$total');
-                    },
-                  ),
-          ),
+              child: (remotePDFpath == '')
+                  ? Container(
+                      child:
+                          Text('Loading ...', style: TextStyle(fontSize: 24)))
+                  : Center(
+                      child: Container(
+                        decoration: BoxDecoration(
+                            border: Border.all(color: Colors.black, width: 2),
+                            borderRadius: BorderRadius.circular(10)),
+                        child: PDFView(
+                          filePath: remotePDFpath,
+                          enableSwipe: true,
+                          swipeHorizontal: false,
+                          autoSpacing: true,
+                          pageFling: true,
+                          fitEachPage: true,
+                          fitPolicy: FitPolicy.WIDTH,
+                          onRender: (_pages) {
+                            setState(() {
+                              pages = _pages;
+                              currentPage = 0;
+                              isReady = true;
+                            });
+                          },
+                          onError: (error) {
+                            print(error.toString());
+                          },
+                          onPageError: (page, error) {
+                            print('$page: ${error.toString()}');
+                          },
+                          onViewCreated: (PDFViewController pdfViewController) {
+                            _controller.complete(pdfViewController);
+                          },
+                          onPageChanged: (int? page, int? total) {
+                            print('page change: $page/$total');
+                          },
+                        ),
+                      ),
+                    )),
           Padding(
             padding: const EdgeInsets.all(30.0),
             child: Align(

@@ -13,12 +13,12 @@ class ExampleAppBar extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(20.0, 5.0, 20.0, 5.0),
         decoration: const BoxDecoration(
             color: Colors.white,
-            borderRadius: const BorderRadius.only(
-              bottomLeft: const Radius.circular(10.0),
-              bottomRight: const Radius.circular(10.0),
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(10.0),
+              bottomRight: Radius.circular(10.0),
             ),
             boxShadow: <BoxShadow>[
-              const BoxShadow(
+              BoxShadow(
                   color: Colors.black12, spreadRadius: 10.0, blurRadius: 20.0)
             ]),
         child: Row(

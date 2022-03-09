@@ -6,6 +6,7 @@ import 'video_example.dart';
 import 'web_view_example.dart';
 import 'package:flutter/services.dart';
 import 'pdf_view_example.dart';
+import 'youtube_player.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -98,10 +99,24 @@ class _MyHomePageState extends State<MyHomePage> {
                   style: TextStyle(fontSize: 18),
                 ),
                 onTap: () {
-                  Navigator.push(
+                  Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
                       builder: (_) => PDFexample(),
+                    ),
+                  );
+                }),
+            heightBox,
+            InkWell(
+                child: const Text(
+                  'View Youtube Video',
+                  style: TextStyle(fontSize: 18),
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => Youtube(),
                     ),
                   );
                 }),
