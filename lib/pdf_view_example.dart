@@ -7,6 +7,8 @@ import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:path_provider/path_provider.dart';
 import 'main.dart';
 
+import 'package:flutter/scheduler.dart';
+
 class PDFexample extends StatefulWidget {
   const PDFexample({Key? key}) : super(key: key);
 
@@ -29,6 +31,11 @@ class _PDFexampleState extends State<PDFexample> {
   @override
   void initState() {
     super.initState();
+    // SchedulerBinding.instance
+    //     ?.addPostFrameCallback((_) => () {
+
+    //     });
+
     createFileOfPdfUrl();
   }
 
@@ -71,13 +78,18 @@ class _PDFexampleState extends State<PDFexample> {
           child: Icon(Icons.arrow_back),
           onTap: () {
             try {
-              Navigator.pop(context);
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => MyApp(),
-                ),
-              );
+              Future.delayed(Duration.zero, () {
+                Navigator.pop(context);
+              });
+
+              Future.delayed(Duration.zero, () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const MyHomePage(title: 'Content Examples'),
+                  ),
+                );
+              });
             } catch (e) {}
           },
         ),

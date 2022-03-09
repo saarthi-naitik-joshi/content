@@ -105,7 +105,7 @@ class _YoutubeState extends State<Youtube> {
           _isPlayerReady = true;
         },
         onEnded: (data) {
-          _controller.seekTo(const Duration(seconds: 0));
+          _controller.seekTo(Duration.zero);
         },
       ),
       builder: (context, player) => Scaffold(
