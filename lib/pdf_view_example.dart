@@ -117,7 +117,6 @@ class _PDFexampleState extends State<PDFexample> {
                           onRender: (_pages) {
                             setState(() {
                               pages = _pages;
-                              currentPage = 0;
                               isReady = true;
                             });
                           },
@@ -136,56 +135,6 @@ class _PDFexampleState extends State<PDFexample> {
                         ),
                       ),
                     )),
-          Padding(
-            padding: const EdgeInsets.all(30.0),
-            child: Align(
-              alignment: Alignment.bottomLeft,
-              child: FutureBuilder<PDFViewController>(
-                  future: _controller.future,
-                  builder:
-                      (context, AsyncSnapshot<PDFViewController> snapshot) {
-                    if (snapshot.hasData) {
-                      return FloatingActionButton.extended(
-                        label: const Text('-', style: TextStyle(fontSize: 24)),
-                        onPressed: () async {
-                          if (currentPage != 0) {
-                            currentPage = currentPage! - 1;
-                            await snapshot.data!.setPage(currentPage!);
-                            setState(() {});
-                          }
-                        },
-                      );
-                    } else {
-                      return Container();
-                    }
-                  }),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(30.0),
-            child: Align(
-              alignment: Alignment.bottomRight,
-              child: FutureBuilder<PDFViewController>(
-                  future: _controller.future,
-                  builder:
-                      (context, AsyncSnapshot<PDFViewController> snapshot) {
-                    if (snapshot.hasData) {
-                      return FloatingActionButton.extended(
-                        label: const Text('+', style: TextStyle(fontSize: 24)),
-                        onPressed: () async {
-                          if (pages != currentPage! + 1) {
-                            currentPage = currentPage! + 1;
-                            await snapshot.data!.setPage(currentPage!);
-                            setState(() {});
-                          }
-                        },
-                      );
-                    } else {
-                      return Container();
-                    }
-                  }),
-            ),
-          ),
         ],
       ),
     );
