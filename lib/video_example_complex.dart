@@ -281,6 +281,7 @@ class _VideoOverlayState extends State<VideoOverlay> {
     return Positioned(
         bottom: 0,
         child: Container(
+          color: Colors.grey.withOpacity(0.5),
           width: MediaQuery.of(context).size.width * .9,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
