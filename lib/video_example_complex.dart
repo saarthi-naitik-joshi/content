@@ -4,6 +4,14 @@ import 'package:flutter/services.dart';
 
 bool _isFullScreen = false;
 bool isOverlayVisible = false;
+int nowPlaying = 0;
+List<String> allVideos = [
+  "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+  "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+  "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+  "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
+  "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4"
+];
 
 class VideoComplex extends StatelessWidget {
   @override
@@ -40,10 +48,12 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
   void initState() {
     super.initState();
 
-    _isFullScreen = false;
+    playVideo();
+  }
+
+  playVideo() {
     _controller = VideoPlayerController.network(
-      'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
-      //closedCaptionFile: _loadCaptions(),
+      allVideos[nowPlaying],
       videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
     );
 
@@ -77,10 +87,11 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
                   ? const EdgeInsets.all(0)
                   : const EdgeInsets.only(bottom: 20),
               child: AspectRatio(
-                aspectRatio: _isFullScreen
-                    ? MediaQuery.of(context).size.width /
-                        MediaQuery.of(context).size.height
-                    : _controller.value.aspectRatio,
+                aspectRatio: _controller.value.aspectRatio,
+                // aspectRatio: _isFullScreen
+                //     ? MediaQuery.of(context).size.width /
+                //         MediaQuery.of(context).size.height
+                //     : _controller.value.aspectRatio,
                 child: Stack(
                   alignment: Alignment.bottomCenter,
                   children: <Widget>[
@@ -152,13 +163,17 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
                           setState(() {});
                         }),
                     IconButton(
-                      icon: const Icon(Icons.skip_next),
-                      onPressed: _isPlayerReady
-                          ? () => {
-                                _controller.seekTo(Duration.zero)
-                              } // _videoPlayerController .load(videoID)
-                          : null,
-                    ),
+                        icon: const Icon(Icons.skip_next),
+                        onPressed: () {
+                          _controller.pause();
+                          _controller.dispose();
+                          if (nowPlaying == allVideos.length - 1) {
+                            nowPlaying = 0;
+                          } else {
+                            nowPlaying++;
+                          }
+                          playVideo();
+                        }),
                   ],
                 ),
         ],
