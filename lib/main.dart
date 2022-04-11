@@ -7,14 +7,12 @@ import 'web_view_example.dart';
 import 'package:flutter/services.dart';
 import 'pdf_view_example.dart';
 import 'youtube_player.dart';
+import './bottom_sheet.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setPreferredOrientations(
-          [DeviceOrientation.landscapeRight, DeviceOrientation.portraitUp])
-      .then((_) {
-    runApp(const MyApp());
-  });
+
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -121,6 +119,20 @@ class _MyHomePageState extends State<MyHomePage> {
                     context,
                     MaterialPageRoute(
                       builder: (_) => Youtube(),
+                    ),
+                  );
+                }),
+            heightBox,
+            InkWell(
+                child: const Text(
+                  'Bottom Sheet',
+                  style: TextStyle(fontSize: 18),
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => BottomSheetImplementation(),
                     ),
                   );
                 }),
