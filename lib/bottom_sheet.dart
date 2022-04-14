@@ -1,12 +1,15 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'dart:io';
 
-const textStyle = TextStyle(color: Colors.blue, fontSize: 20);
+const textStyle = TextStyle(color: Colors.blue, fontSize: 16);
 const menuBackgroundColor = Color(0xffeeeeee);
+const BASE_URL = 'http://192.168.29.149:3001';
 
 class BottomSheetImplementation extends StatefulWidget {
   const BottomSheetImplementation({Key? key}) : super(key: key);
@@ -41,22 +44,63 @@ class AndroidBottomSheet extends StatefulWidget {
 }
 
 class _AndroidBottomSheetState extends State<AndroidBottomSheet> {
-  File? selectedFile;
-  XFile? image;
-  Widget? imageWidget;
-  String selectedFileName = '';
-  PDFViewController? _controller;
+  List<File>? files;
+  XFile? xFile;
+  List<XFile>? xFiles;
+  String _filesPosted = '';
 
-  getPicture(ImageSource imageOption, BuildContext context) async {
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> postFiles(List<String> filePaths, BuildContext context) async {
     try {
-      image = await UploadHelper().uploadFile(imageOption);
-      selectedFileName = image?.name ?? 'NA';
-      if (image != null) {
-        selectedFile = null;
-        imageWidget = Image.file(File(image?.path ?? ''));
+      List<MultipartFile> fileList = [];
+      filePaths.forEach((element) async {
+        MultipartFile result = await MultipartFile.fromFile(element);
+        fileList.add(result);
+      });
+      print('BASE_URL $BASE_URL');
+      var dio = Dio();
+      var formData = FormData.fromMap({'files': fileList});
+      var response = await dio.post('$BASE_URL/uploadfiles',
+          data: formData,
+          options: Options(headers: {'Content-Type': 'multipart/form-data'}));
+      if (response.statusCode == 200) {
+        _filesPosted = 'Success:' + fileList.length.toString() + ' files added';
+        print(_filesPosted);
+        setState(() {});
       } else {
-        imageWidget = const SizedBox();
+        _filesPosted = 'Error';
+        print('post failed: ${response.statusMessage}');
       }
+      Navigator.of(context).pop;
+    } catch (e) {
+      print('post failed: ${e.toString()}');
+      _filesPosted = 'Error';
+    }
+  }
+
+  Future<void> postXFiles(ImageSource imageOption, BuildContext context) async {
+    try {
+      List<String> filePaths = [];
+      if (imageOption == ImageSource.camera) {
+        xFile = null;
+        xFile = await _picker.pickImage(source: ImageSource.camera);
+        if (xFile != null) {
+          filePaths.add(xFile?.path ?? '');
+          postFiles(filePaths, context);
+        }
+      } else {
+        xFiles = [];
+        xFiles = await _picker.pickMultiImage();
+
+        if (xFiles?.isNotEmpty ?? true) {
+          xFiles?.forEach((xfile) {
+            filePaths.add(xfile.path);
+          });
+          postFiles(filePaths, context);
+        }
+      }
+
       setState(() {});
     } catch (e) {
       print('error: ${e.toString()}');
@@ -67,16 +111,6 @@ class _AndroidBottomSheetState extends State<AndroidBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    if (image == null && selectedFile == null) {
-      selectedFileName = '';
-    } else if (image == null && selectedFile != null) {
-      selectedFileName = selectedFile?.path ?? '';
-    } else if (image != null && selectedFile == null) {
-      selectedFileName = image?.name ?? '';
-    } else if (image != null && selectedFile != null) {
-      // Exception case: using image to over-ride selected file
-      selectedFileName = image?.name ?? '';
-    }
     return Material(
       child: Scaffold(
         appBar: AppBar(title: const Text('Material Scaffold')),
@@ -100,8 +134,7 @@ class _AndroidBottomSheetState extends State<AndroidBottomSheet> {
                               color: Colors.transparent,
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            margin: const EdgeInsets.all(10),
-                            height: 250,
+                            height: 200,
                             width: double.infinity,
                             child: Center(
                               child: Column(
@@ -110,56 +143,40 @@ class _AndroidBottomSheetState extends State<AndroidBottomSheet> {
                                 children: <Widget>[
                                   InkWell(
                                     child: Container(
-                                        padding: const EdgeInsets.all(20),
+                                        padding: const EdgeInsets.all(10),
                                         child: const Center(
                                             child: Text(
                                           'Upload File',
                                           style: textStyle,
                                         ))),
                                     onTap: () async {
-                                      print('inthey');
-
                                       var result = await FilePicker.platform
                                           .pickFiles(
+                                              allowMultiple: true,
                                               type: FileType.custom,
-                                              dialogTitle: 'Choose File',
+                                              dialogTitle: 'Choose Files',
                                               allowedExtensions: ['pdf']);
 
                                       if (result != null) {
-                                        imageWidget = const SizedBox();
-                                        setState(() {});
-                                        selectedFile = File(
-                                            (result.files.first).path ?? '');
-                                        _controller?.setPage(1);
-                                        image = null;
-                                        imageWidget = PDFView(
-                                          filePath: selectedFile?.path,
-                                          enableSwipe: false,
-                                          swipeHorizontal: false,
-                                          autoSpacing: false,
-                                          pageFling: false,
-                                          onRender: (_pages) {
-                                            setState(() {});
-                                          },
-                                          onError: (error) {
-                                            print(error.toString());
-                                          },
-                                          onPageError: (page, error) {
-                                            print('$page: ${error.toString()}');
-                                          },
-                                          onViewCreated: (PDFViewController
-                                              pdfViewController) {
-                                            _controller
-                                                ?.setPage(1)
-                                                .whenComplete(
-                                                    () => pdfViewController);
-                                          },
-                                        );
+                                        print('inthey');
+                                        files = [];
+                                        files = result.paths
+                                            .map((path) => File(path ?? ''))
+                                            .toList();
+
+                                        if (files!.isNotEmpty) {
+                                          List<String> filePathList = [];
+                                          files!.forEach((file) {
+                                            filePathList.add(file.path);
+                                          });
+                                          await postFiles(
+                                              filePathList, context);
+                                        }
                                       } else {
-                                        imageWidget = const SizedBox();
+                                        print('console: No files ');
                                       }
                                       setState(() {});
-                                      Navigator.pop(context);
+                                      Navigator.of(context).pop;
                                     },
                                   ),
                                   const Divider(
@@ -168,13 +185,13 @@ class _AndroidBottomSheetState extends State<AndroidBottomSheet> {
                                   ),
                                   InkWell(
                                     child: Container(
-                                        padding: const EdgeInsets.all(20),
+                                        padding: const EdgeInsets.all(10),
                                         child: const Center(
                                             child: Text(
-                                          'Picture from gallery',
+                                          'Pictures from gallery',
                                           style: textStyle,
                                         ))),
-                                    onTap: () => getPicture(
+                                    onTap: () => postXFiles(
                                         ImageSource.gallery, context),
                                   ),
                                   const Divider(
@@ -183,14 +200,14 @@ class _AndroidBottomSheetState extends State<AndroidBottomSheet> {
                                   ),
                                   InkWell(
                                     child: Container(
-                                        padding: const EdgeInsets.all(20),
+                                        padding: const EdgeInsets.all(10),
                                         child: const Center(
                                             child: Text(
                                           'Picture from camera',
                                           style: textStyle,
                                         ))),
                                     onTap: () =>
-                                        getPicture(ImageSource.camera, context),
+                                        postXFiles(ImageSource.camera, context),
                                   ),
                                 ],
                               ),
@@ -199,10 +216,8 @@ class _AndroidBottomSheetState extends State<AndroidBottomSheet> {
                         },
                       );
                     }),
-                const SizedBox(height: 50),
-                SizedBox(height: 200, width: 200, child: imageWidget),
                 const SizedBox(height: 20),
-                Text('Selected File: $selectedFileName')
+                Text(_filesPosted),
               ],
             ),
           ),
@@ -261,24 +276,5 @@ class _IosBottomSheetState extends State<IosBottomSheet> {
         ),
       ),
     ));
-  }
-}
-
-class UploadHelper {
-  dynamic file;
-  final ImagePicker _picker = ImagePicker();
-
-  Future<dynamic>? uploadFile(ImageSource fileType) async {
-    XFile? file;
-    switch (fileType) {
-      case ImageSource.camera:
-        file = await _picker.pickImage(source: ImageSource.camera);
-
-        break;
-      case ImageSource.gallery:
-        file = await _picker.pickImage(source: ImageSource.gallery);
-        break;
-    }
-    return file;
   }
 }
