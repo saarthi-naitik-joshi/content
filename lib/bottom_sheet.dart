@@ -23,6 +23,10 @@ class BottomSheetImplementation extends StatefulWidget {
 
 class _BottomSheetImplementationState extends State<BottomSheetImplementation> {
   late bool _isIOS;
+  List<File>? files;
+  XFile? xFile;
+  List<XFile>? xFiles;
+  String _filesPosted = '';
 
   @override
   void initState() {
@@ -30,56 +34,36 @@ class _BottomSheetImplementationState extends State<BottomSheetImplementation> {
     _isIOS = Platform.isIOS;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return _isIOS ? const IosBottomSheet() : const AndroidBottomSheet();
-  }
-}
-
-class AndroidBottomSheet extends StatefulWidget {
-  const AndroidBottomSheet({Key? key}) : super(key: key);
-
-  @override
-  State<AndroidBottomSheet> createState() => _AndroidBottomSheetState();
-}
-
-class _AndroidBottomSheetState extends State<AndroidBottomSheet> {
-  List<File>? files;
-  XFile? xFile;
-  List<XFile>? xFiles;
-  String _filesPosted = '';
-
   final ImagePicker _picker = ImagePicker();
 
-  Future<void> postFiles(List<String> filePaths, BuildContext context) async {
-    try {
-      List<MultipartFile> fileList = [];
-      filePaths.forEach((element) async {
-        MultipartFile result = await MultipartFile.fromFile(element);
-        fileList.add(result);
-      });
-      print('BASE_URL $BASE_URL');
-      var dio = Dio();
-      var formData = FormData.fromMap({'files': fileList});
-      var response = await dio.post('$BASE_URL/uploadfiles',
-          data: formData,
-          options: Options(headers: {'Content-Type': 'multipart/form-data'}));
-      if (response.statusCode == 200) {
-        _filesPosted = 'Success:' + fileList.length.toString() + ' files added';
-        print(_filesPosted);
-        setState(() {});
-      } else {
-        _filesPosted = 'Error';
-        print('post failed: ${response.statusMessage}');
+  Future<void> handleFilesUpload() async {
+    var result = await FilePicker.platform.pickFiles(
+        allowMultiple: true,
+        type: FileType.custom,
+        dialogTitle: 'Choose Files',
+        allowedExtensions: ['pdf']);
+
+    if (result != null) {
+      print('inthey');
+      files = [];
+      files = result.paths.map((path) => File(path ?? '')).toList();
+
+      if (files!.isNotEmpty) {
+        List<String> filePathList = [];
+        files!.forEach((file) {
+          filePathList.add(file.path);
+        });
+        await postFiles(filePathList, context);
       }
-      Navigator.of(context).pop;
-    } catch (e) {
-      print('post failed: ${e.toString()}');
-      _filesPosted = 'Error';
+    } else {
+      print('console: No files ');
     }
+    setState(() {});
+    Navigator.of(context).pop;
   }
 
-  Future<void> postXFiles(ImageSource imageOption, BuildContext context) async {
+  Future<void> handleImageUpload(
+      ImageSource imageOption, BuildContext context) async {
     try {
       List<String> filePaths = [];
       if (imageOption == ImageSource.camera) {
@@ -109,6 +93,34 @@ class _AndroidBottomSheetState extends State<AndroidBottomSheet> {
     Navigator.pop(context);
   }
 
+  Future<void> postFiles(List<String> filePaths, BuildContext context) async {
+    try {
+      List<MultipartFile> fileList = [];
+      filePaths.forEach((element) async {
+        MultipartFile result = await MultipartFile.fromFile(element);
+        fileList.add(result);
+      });
+      print('BASE_URL $BASE_URL');
+      var dio = Dio();
+      var formData = FormData.fromMap({'files': fileList});
+      var response = await dio.post('$BASE_URL/uploadfiles',
+          data: formData,
+          options: Options(headers: {'Content-Type': 'multipart/form-data'}));
+      if (response.statusCode == 200) {
+        _filesPosted = 'Success:' + fileList.length.toString() + ' files added';
+        print(_filesPosted);
+        setState(() {});
+      } else {
+        _filesPosted = 'Error';
+        print('post failed: ${response.statusMessage}');
+      }
+      Navigator.of(context).pop;
+    } catch (e) {
+      print('post failed: ${e.toString()}');
+      _filesPosted = 'Error';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -120,102 +132,105 @@ class _AndroidBottomSheetState extends State<AndroidBottomSheet> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                InkWell(
-                    child: const Text(
-                      'Open Material Bottom Sheet',
-                      style: textStyle,
-                    ),
-                    onTap: () {
-                      showModalBottomSheet<void>(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return Container(
-                            decoration: BoxDecoration(
-                              color: Colors.transparent,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            height: 200,
-                            width: double.infinity,
-                            child: Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.max,
-                                children: <Widget>[
-                                  InkWell(
-                                    child: Container(
-                                        padding: const EdgeInsets.all(10),
-                                        child: const Center(
-                                            child: Text(
-                                          'Upload File',
-                                          style: textStyle,
-                                        ))),
-                                    onTap: () async {
-                                      var result = await FilePicker.platform
-                                          .pickFiles(
-                                              allowMultiple: true,
-                                              type: FileType.custom,
-                                              dialogTitle: 'Choose Files',
-                                              allowedExtensions: ['pdf']);
-
-                                      if (result != null) {
-                                        print('inthey');
-                                        files = [];
-                                        files = result.paths
-                                            .map((path) => File(path ?? ''))
-                                            .toList();
-
-                                        if (files!.isNotEmpty) {
-                                          List<String> filePathList = [];
-                                          files!.forEach((file) {
-                                            filePathList.add(file.path);
-                                          });
-                                          await postFiles(
-                                              filePathList, context);
-                                        }
-                                      } else {
-                                        print('console: No files ');
-                                      }
-                                      setState(() {});
-                                      Navigator.of(context).pop;
-                                    },
-                                  ),
-                                  const Divider(
-                                    thickness: 1,
-                                    color: Color(0xFFCFCFCF), // .grey[700],
-                                  ),
-                                  InkWell(
-                                    child: Container(
-                                        padding: const EdgeInsets.all(10),
-                                        child: const Center(
-                                            child: Text(
-                                          'Pictures from gallery',
-                                          style: textStyle,
-                                        ))),
-                                    onTap: () => postXFiles(
-                                        ImageSource.gallery, context),
-                                  ),
-                                  const Divider(
-                                    thickness: 1,
-                                    color: Color(0xFFCFCFCF), // .grey[700],
-                                  ),
-                                  InkWell(
-                                    child: Container(
-                                        padding: const EdgeInsets.all(10),
-                                        child: const Center(
-                                            child: Text(
-                                          'Picture from camera',
-                                          style: textStyle,
-                                        ))),
-                                    onTap: () =>
-                                        postXFiles(ImageSource.camera, context),
-                                  ),
-                                ],
+                _isIOS
+                    ? CupertinoButton(
+                        onPressed: () {
+                          showCupertinoModalPopup<void>(
+                            context: context,
+                            builder: (BuildContext context) =>
+                                CupertinoActionSheet(
+                              title: const Text(
+                                'Cupertino Bottom Sheet',
                               ),
+                              message: const Text('Upload Files & Images'),
+                              actions: <CupertinoActionSheetAction>[
+                                CupertinoActionSheetAction(
+                                  child: const Text('Upload Files'),
+                                  onPressed: () => handleFilesUpload(),
+                                ),
+                                CupertinoActionSheetAction(
+                                  child: const Text('Pictures from gallery'),
+                                  onPressed: () => handleImageUpload(
+                                      ImageSource.gallery, context),
+                                ),
+                                CupertinoActionSheetAction(
+                                  child: const Text('Picture from camera'),
+                                  onPressed: () => handleImageUpload(
+                                      ImageSource.camera, context),
+                                )
+                              ],
                             ),
                           );
                         },
-                      );
-                    }),
+                        child: const Text('Cupertino Action Sheet'),
+                      )
+                    : InkWell(
+                        child: const Text(
+                          'Open Material Bottom Sheet',
+                          style: textStyle,
+                        ),
+                        onTap: () {
+                          showModalBottomSheet<void>(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.transparent,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                height: 200,
+                                width: double.infinity,
+                                child: Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    mainAxisSize: MainAxisSize.max,
+                                    children: <Widget>[
+                                      InkWell(
+                                          child: Container(
+                                              padding: const EdgeInsets.all(10),
+                                              child: const Center(
+                                                  child: Text(
+                                                'Upload Files',
+                                                style: textStyle,
+                                              ))),
+                                          onTap: () => handleFilesUpload()),
+                                      const Divider(
+                                        thickness: 1,
+                                        color: Color(0xFFCFCFCF), // .grey[700],
+                                      ),
+                                      InkWell(
+                                        child: Container(
+                                            padding: const EdgeInsets.all(10),
+                                            child: const Center(
+                                                child: Text(
+                                              'Pictures from gallery',
+                                              style: textStyle,
+                                            ))),
+                                        onTap: () => handleImageUpload(
+                                            ImageSource.gallery, context),
+                                      ),
+                                      const Divider(
+                                        thickness: 1,
+                                        color: Color(0xFFCFCFCF), // .grey[700],
+                                      ),
+                                      InkWell(
+                                        child: Container(
+                                            padding: const EdgeInsets.all(10),
+                                            child: const Center(
+                                                child: Text(
+                                              'Picture from camera',
+                                              style: textStyle,
+                                            ))),
+                                        onTap: () => handleImageUpload(
+                                            ImageSource.camera, context),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        }),
                 const SizedBox(height: 20),
                 Text(_filesPosted),
               ],
@@ -224,57 +239,5 @@ class _AndroidBottomSheetState extends State<AndroidBottomSheet> {
         ),
       ),
     );
-  }
-}
-
-class IosBottomSheet extends StatefulWidget {
-  const IosBottomSheet({Key? key}) : super(key: key);
-
-  @override
-  State<IosBottomSheet> createState() => _IosBottomSheetState();
-}
-
-class _IosBottomSheetState extends State<IosBottomSheet> {
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-        child: CupertinoPageScaffold(
-      child: Center(
-        child: CupertinoButton(
-          onPressed: () {
-            showCupertinoModalPopup<void>(
-              context: context,
-              builder: (BuildContext context) => CupertinoActionSheet(
-                title: const Text(
-                  'Upload',
-                ),
-                message: const Text('Select File to upload '),
-                actions: <CupertinoActionSheetAction>[
-                  CupertinoActionSheetAction(
-                    child: const Text('Upload File'),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                  ),
-                  CupertinoActionSheetAction(
-                    child: const Text('Choose from gallery'),
-                    onPressed: () {
-                      //imageFile = UploadHelper();
-                    },
-                  ),
-                  CupertinoActionSheetAction(
-                    child: const Text('Take a photo'),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                  )
-                ],
-              ),
-            );
-          },
-          child: const Text('Cupertino Action Sheet'),
-        ),
-      ),
-    ));
   }
 }
