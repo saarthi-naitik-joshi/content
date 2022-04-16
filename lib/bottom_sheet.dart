@@ -41,7 +41,7 @@ class _BottomSheetImplementationState extends State<BottomSheetImplementation> {
         allowMultiple: true,
         type: FileType.custom,
         dialogTitle: 'Choose Files',
-        allowedExtensions: ['pdf']);
+        allowedExtensions: ['pdf', 'png', 'jpeg', 'jpg', 'svg']);
 
     if (result != null) {
       print('inthey');
@@ -53,17 +53,17 @@ class _BottomSheetImplementationState extends State<BottomSheetImplementation> {
         files!.forEach((file) {
           filePathList.add(file.path);
         });
-        await postFiles(filePathList, context);
+        await postFiles(filePathList);
+      } else {
+        _filesPosted = 'Fail: User Cancelled';
       }
     } else {
-      print('console: No files ');
+      _filesPosted = 'Fail: User Cancelled';
     }
     setState(() {});
-    Navigator.of(context).pop;
   }
 
-  Future<void> handleImageUpload(
-      ImageSource imageOption, BuildContext context) async {
+  Future<void> handleImageUpload(ImageSource imageOption) async {
     try {
       List<String> filePaths = [];
       if (imageOption == ImageSource.camera) {
@@ -71,17 +71,21 @@ class _BottomSheetImplementationState extends State<BottomSheetImplementation> {
         xFile = await _picker.pickImage(source: ImageSource.camera);
         if (xFile != null) {
           filePaths.add(xFile?.path ?? '');
-          postFiles(filePaths, context);
+          postFiles(filePaths);
+        } else {
+          _filesPosted = 'Fail: User Cancelled';
         }
       } else {
         xFiles = [];
         xFiles = await _picker.pickMultiImage();
 
-        if (xFiles?.isNotEmpty ?? true) {
+        if (xFiles?.isNotEmpty ?? false) {
           xFiles?.forEach((xfile) {
             filePaths.add(xfile.path);
           });
-          postFiles(filePaths, context);
+          postFiles(filePaths);
+        } else {
+          _filesPosted = 'Fail: User Cancelled';
         }
       }
 
@@ -89,11 +93,9 @@ class _BottomSheetImplementationState extends State<BottomSheetImplementation> {
     } catch (e) {
       print('error: ${e.toString()}');
     }
-
-    Navigator.pop(context);
   }
 
-  Future<void> postFiles(List<String> filePaths, BuildContext context) async {
+  Future<void> postFiles(List<String> filePaths) async {
     try {
       List<MultipartFile> fileList = [];
       filePaths.forEach((element) async {
@@ -114,7 +116,6 @@ class _BottomSheetImplementationState extends State<BottomSheetImplementation> {
         _filesPosted = 'Error';
         print('post failed: ${response.statusMessage}');
       }
-      Navigator.of(context).pop;
     } catch (e) {
       print('post failed: ${e.toString()}');
       _filesPosted = 'Error';
@@ -125,7 +126,7 @@ class _BottomSheetImplementationState extends State<BottomSheetImplementation> {
   Widget build(BuildContext context) {
     return Material(
       child: Scaffold(
-        appBar: AppBar(title: const Text('Material Scaffold')),
+        appBar: AppBar(title: const Text('Scaffold Title')),
         body: Container(
           color: const Color(0xffc8c8c8),
           child: Center(
@@ -145,19 +146,24 @@ class _BottomSheetImplementationState extends State<BottomSheetImplementation> {
                               message: const Text('Upload Files & Images'),
                               actions: <CupertinoActionSheetAction>[
                                 CupertinoActionSheetAction(
-                                  child: const Text('Upload Files'),
-                                  onPressed: () => handleFilesUpload(),
-                                ),
+                                    child: const Text('Upload Files'),
+                                    onPressed: () {
+                                      handleFilesUpload();
+                                      Navigator.of(context).pop();
+                                    }),
                                 CupertinoActionSheetAction(
-                                  child: const Text('Pictures from gallery'),
-                                  onPressed: () => handleImageUpload(
-                                      ImageSource.gallery, context),
-                                ),
+                                    child: const Text('Pictures from gallery'),
+                                    onPressed: () async {
+                                      await handleImageUpload(
+                                          ImageSource.gallery);
+                                      Navigator.of(context).pop();
+                                    }),
                                 CupertinoActionSheetAction(
-                                  child: const Text('Picture from camera'),
-                                  onPressed: () => handleImageUpload(
-                                      ImageSource.camera, context),
-                                )
+                                    child: const Text('Picture from camera'),
+                                    onPressed: () {
+                                      handleImageUpload(ImageSource.camera);
+                                      Navigator.of(context).pop();
+                                    })
                               ],
                             ),
                           );
@@ -193,37 +199,44 @@ class _BottomSheetImplementationState extends State<BottomSheetImplementation> {
                                                 'Upload Files',
                                                 style: textStyle,
                                               ))),
-                                          onTap: () => handleFilesUpload()),
+                                          onTap: () {
+                                            handleFilesUpload();
+                                            Navigator.of(context).pop();
+                                          }),
                                       const Divider(
                                         thickness: 1,
                                         color: Color(0xFFCFCFCF), // .grey[700],
                                       ),
                                       InkWell(
-                                        child: Container(
-                                            padding: const EdgeInsets.all(10),
-                                            child: const Center(
-                                                child: Text(
-                                              'Pictures from gallery',
-                                              style: textStyle,
-                                            ))),
-                                        onTap: () => handleImageUpload(
-                                            ImageSource.gallery, context),
-                                      ),
+                                          child: Container(
+                                              padding: const EdgeInsets.all(10),
+                                              child: const Center(
+                                                  child: Text(
+                                                'Pictures from gallery',
+                                                style: textStyle,
+                                              ))),
+                                          onTap: () async {
+                                            await handleImageUpload(
+                                                ImageSource.gallery);
+                                            Navigator.of(context).pop();
+                                          }),
                                       const Divider(
                                         thickness: 1,
                                         color: Color(0xFFCFCFCF), // .grey[700],
                                       ),
                                       InkWell(
-                                        child: Container(
-                                            padding: const EdgeInsets.all(10),
-                                            child: const Center(
-                                                child: Text(
-                                              'Picture from camera',
-                                              style: textStyle,
-                                            ))),
-                                        onTap: () => handleImageUpload(
-                                            ImageSource.camera, context),
-                                      ),
+                                          child: Container(
+                                              padding: const EdgeInsets.all(10),
+                                              child: const Center(
+                                                  child: Text(
+                                                'Picture from camera',
+                                                style: textStyle,
+                                              ))),
+                                          onTap: () {
+                                            handleImageUpload(
+                                                ImageSource.camera);
+                                            Navigator.of(context).pop();
+                                          }),
                                     ],
                                   ),
                                 ),
