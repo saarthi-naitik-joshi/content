@@ -98,16 +98,19 @@ class _BottomSheetImplementationState extends State<BottomSheetImplementation> {
   Future<void> postFiles(List<String> filePaths) async {
     try {
       List<MultipartFile> fileList = [];
-      filePaths.forEach((element) async {
-        MultipartFile result = await MultipartFile.fromFile(element);
+      for (var element in filePaths) {
+        File fl = File(element);
+        MultipartFile result = await MultipartFile.fromFile(element,
+            filename: fl.path.split('/').last);
         fileList.add(result);
-      });
+      }
       print('BASE_URL $BASE_URL');
       var dio = Dio();
       var formData = FormData.fromMap({'files': fileList});
-      var response = await dio.post('$BASE_URL/uploadfiles',
-          data: formData,
-          options: Options(headers: {'Content-Type': 'multipart/form-data'}));
+      var response = await dio.post(
+        '$BASE_URL/uploadfiles',
+        data: formData,
+      ); // options: Options(headers: {'Content-Type': 'multipart/form-data'})
       if (response.statusCode == 200) {
         _filesPosted = 'Success:' + fileList.length.toString() + ' files added';
         print(_filesPosted);
